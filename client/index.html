@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<!-- HTML5 Hello world by kirupa - http://www.kirupa.com/html5/getting_your_feet_wet_html5_pg1.htm -->
+<html lang="en-us">
+
+<head>
+	<meta charset="utf-8">
+	<title>筆veat - タイトル</title>
+	<style type="text/css">
+		body {
+			margin: 0px;
+			overflow: hidden;
+			/* 画像ファイルの指定 */
+			background-image: url(image/bg.jpg);
+			
+			/* 画像を常に天地左右の中央に配置 */
+			background-position: center center;
+			
+			/* 画像をタイル状に繰り返し表示しない */
+			background-repeat: no-repeat;
+			
+			/* コンテンツの高さが画像の高さより大きい時、動かないように固定 */
+			background-attachment: fixed;
+			
+			/* 表示するコンテナの大きさに基づいて、背景画像を調整 */
+			background-size: cover;
+			
+			/* 背景画像が読み込まれる前に表示される背景のカラー */
+			background-color: #464646;
+		}
+	</style>
+	<script src="./js/createjs-2014.12.12.min.js"></script>
+	<meta name="viewport" content="user-scalable=no">
+</head>
+
+<body>
+	<canvas id="myCanvas"></canvas>
+	<script>
+		var mycanvas = document.getElementById('myCanvas');
+		expandCanvas(mycanvas);
+		var stage = new createjs.Stage(mycanvas);
+		if (createjs.Touch.isSupported()) {
+			createjs.Touch.enable(stage);
+
+		}
+
+		var scale;
+
+		var logo_large = new createjs.Bitmap("./image/logo_large.svg");
+		var line = new createjs.Bitmap("./image/line.svg");
+		var discription = new createjs.Bitmap("./image/discription.svg");
+		var host = new createjs.Bitmap("./image/host.svg");
+		var client = new createjs.Bitmap("./image/client.svg");
+		var host_cl = new createjs.Bitmap("./image/host_click.svg");
+		var client_cl = new createjs.Bitmap("./image/client_click.svg");
+
+
+		console.log(mycanvas.width, mycanvas.height);
+		logo_large.regX = 421;
+		logo_large.regY = 298;
+		logo_large.scaleX = scale * 0.4;
+		logo_large.scaleY = scale * 0.4;
+		logo_large.x = mycanvas.width / 2 + (scale * 20);
+		logo_large.y = mycanvas.height / 2 + (scale * -130);
+		line.regX = 421;
+		line.regY = 298;
+		line.scaleX = scale * 1;
+		line.scaleY = scale * 1;
+		line.x = mycanvas.width / 2 + (scale * 0);
+		line.y = mycanvas.height / 2 + (scale * 50);
+		discription.regX = 196;
+		discription.regY = 13;
+		discription.scaleX = scale * 1.2;
+		discription.scaleY = scale * 1.2;
+		discription.x = mycanvas.width / 2 + (scale * 0);
+		discription.y = mycanvas.height / 2 + (scale * 15);
+		host.regX = 421;
+		host.regY = 298;
+		host.scaleX = scale * 0.3;
+		host.scaleY = scale * 0.3;
+		host.x = mycanvas.width / 2 + (scale * -180);
+		host.y = mycanvas.height / 2 + (scale * 130);
+		host_cl.regX = 421;
+		host_cl.regY = 298;
+		host_cl.scaleX = scale * 0.3;
+		host_cl.scaleY = scale * 0.3;
+		host_cl.x = host.x;
+		host_cl.y = host.y;
+		host_cl.alpha = 0;
+		host.addEventListener("click", function() {
+			console.log("click");
+			createjs.Tween.get(host_cl, { loop: false })
+  				.to({ alpha: 1 }, 100)
+  				.to({ alpha: 0 }, 100)
+  				.to({ alpha: 1 }, 100)
+  				.to({ alpha: 0 }, 100)
+  				.to({ alpha: 1 }, 100)
+  				.to({}, 1000)
+  				.to({ alpha: 0 }, 1000, createjs.Ease.getPowInOut(6));;
+			createjs.Tween.get(host, { loop: false })
+  				.to({}, 500)
+  				.to({ alpha: 0 }, 1);
+  			createjs.Tween.get(logo_large, { loop: false })
+  				.to({}, 500)
+  				.to({ x: -800 }, 1000, createjs.Ease.getPowInOut(6));
+  			createjs.Tween.get(line, { loop: false })
+  				.to({}, 500)
+  				.to({ x: -800 }, 1000, createjs.Ease.getPowInOut(6));
+  			createjs.Tween.get(discription, { loop: false })
+  				.to({}, 500)
+  				.to({ x: -800 }, 1000, createjs.Ease.getPowInOut(6));
+  			createjs.Tween.get(client, { loop: false })
+  				.to({}, 500)
+  				.to({ x: mycanvas.width + 800 }, 1000, createjs.Ease.getPowInOut(6));
+  			window.setTimeout( function() { document.location = '/write.html?type=host'; }, 2500 );
+		});
+		client.regX = 421;
+		client.regY = 298;
+		client.scaleX = scale * 0.3;
+		client.scaleY = scale * 0.3;
+		client.x = mycanvas.width / 2 + (scale * 180);
+		client.y = mycanvas.height / 2 + (scale * 130);
+		client_cl.regX = 421;
+		client_cl.regY = 298;
+		client_cl.scaleX = scale * 0.3;
+		client_cl.scaleY = scale * 0.3;
+		client_cl.x = client.x;
+		client_cl.y = client.y;
+		client_cl.alpha = 0;
+		client.addEventListener("click", function() {
+			console.log("click");
+			createjs.Tween.get(client_cl, { loop: false })
+  				.to({ alpha: 1 }, 100)
+  				.to({ alpha: 0 }, 100)
+  				.to({ alpha: 1 }, 100)
+  				.to({ alpha: 0 }, 100)
+  				.to({ alpha: 1 }, 100)
+  				.to({}, 1000)
+  				.to({ alpha: 0 }, 1000, createjs.Ease.getPowInOut(6));;
+			createjs.Tween.get(client, { loop: false })
+  				.to({}, 500)
+  				.to({ alpha: 0 }, 1);
+  			createjs.Tween.get(logo_large, { loop: false })
+  				.to({}, 500)
+  				.to({ x: mycanvas.width + 800 }, 1000, createjs.Ease.getPowInOut(6));
+  			createjs.Tween.get(line, { loop: false })
+  				.to({}, 500)
+  				.to({ x: mycanvas.width + 800 }, 1000, createjs.Ease.getPowInOut(6));
+  			createjs.Tween.get(discription, { loop: false })
+  				.to({}, 500)
+  				.to({ x: mycanvas.width + 800 }, 1000, createjs.Ease.getPowInOut(6));
+  			createjs.Tween.get(host, { loop: false })
+  				.to({}, 500)
+  				.to({ x: -800 }, 1000, createjs.Ease.getPowInOut(6));
+  			window.setTimeout( function() { document.location = '/write.html?type=client'; }, 2500 );
+		});
+
+		stage.addChild(logo_large, line, discription, host, host_cl, client, client_cl);
+
+		var update = function() {
+			stage.update();
+		}
+		createjs.Ticker.setFPS(60);
+		createjs.Ticker.addEventListener('tick', update);
+
+		function expandCanvas(canvas) {
+			var b = document.body;
+			var d = document.documentElement;
+			var w = Math.max(b.clientWidth, b.scrollWidth, d.scrollWidth, d.clientWidth);
+			var h = Math.max(b.clientHeight, b.scrollHeight, d.scrollHeight, d.clientHeight);
+			var reti = window.devicePixelRatio;
+			var ctx = canvas.getContext("2d");
+			scale = Math.max(w, h) / 1200  * reti;
+			// scale = reti;
+			canvas.width = w * reti;
+			canvas.height = h * reti;
+			canvas.style.width = w + "px";
+			canvas.style.height = h + "px";
+			//ctx.scale(reti,reti);
+		}
+	</script>
+</body>
+
+</html>

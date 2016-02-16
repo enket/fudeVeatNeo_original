@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en" ng-app>
+
+<head>
+  <title>筆veat - キャンバス</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="css/reset.css">
+  <!-- CSS reset -->
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Resource style -->
+  <script src="js/modernizr.js"></script>
+  <!-- Modernizr -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    var canv_w = 2000;
+    var canv_h = 1000;
+    var client_w = window.innerWidth;
+    var client_h = window.innerHeight;
+    var dw = canv_w - client_w - 10;
+    var dh = canv_h - client_h - 10 + 80;
+    var global_x = 0;
+    var global_y = 0;
+    var old_fact = 0.6;
+    var new_fact = 0.4;
+    var first;
+    var isDrawing, lastPoint;
+    var data_send = {
+      last: [{ x : 0.0, y : 0.0, rad: 0.0 }],
+      caurrent: [{ x : 0.0, y : 0.0, rad: 0.0 }]
+    };
+    var getquery = GetQueryString();
+    var brushImg = new Image();
+    brushImg.src = "https://i.imgur.com/qsdVILu.png";
+
+    window.onload = function() {
+      startCanvas = document.getElementById("startCanvas");
+      newcanvas1 = new createCanvas(1);
+      addevent(newcanvas1);
+    }
+
+    function createCanvas(id) {
+      this.idname = "canvas" + id;
+      this.element = document.createElement("canvas");
+      this.element.id = this.idname;
+      this.element.style.position = "absolute";
+      this.element.style.zIndex = id;
+      this.element.style.top = 80 + "px";
+      expandCanvas(this.element);
+      this.ctx = this.element.getContext('2d');
+      this.ctx.globalAlpha = 0.6;
+      this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      document.body.insertBefore(this.element, startCanvas.nextSibling);
+    }
+
+    function addevent(canvas) {
+      //
+      //�^�b�`�C�x���g�֐��Q
+      //
+      canvas.element.addEventListener('touchstart', function(event) {
+        if (event.changedTouches.length == 2) {
+        }
+        if (event.changedTouches.length == 1) {
+          lastPoint = {
+            x: event.changedTouches[0].pageX - global_x,
+            y: event.changedTouches[0].pageY - 80 - global_y,
+            rad: event.changedTouches[0].radiusX
+          };
+        }
+      }, false);
+
+      canvas.element.addEventListener('touchmove', function(event) {
+        event.preventDefault(); // �^�b�`�ɂ������ʃX�N���[�����~�߂�
+        //console.log(event.changedTouches[0]);
+        if (event.changedTouches.length == 2) {
+          var x = (event.changedTouches[0].pageX + event.changedTouches[1].pageX) / 2;
+          var y = (event.changedTouches[0].pageY + event.changedTouches[1].pageY) / 2;
+          if (first == 1) {
+            lastPoint = {
+              x: x,
+              y: y
+            };
+            first = 0;
+          }
+          var dx = x - lastPoint.x;
+          var dy = y - lastPoint.y;
+          global_x += dx;
+          global_y += dy;
+          if (global_x > 0) {
+            global_x = 0;
+          }
+          else if (global_x < -dw) {
+            global_x = -dw;
+          }
+          if (global_y > 0) {
+            global_y = 0;
+          }
+          else if (global_y < -dh) {
+            global_y = -dh;
+          }
+          reDraw(canvas.element);
+          lastPoint = {
+            x: x,
+            y: y
+          };
+        }
+        else if (event.changedTouches.length == 1) {
+          data_send.last = {
+            x: lastPoint.x,
+            y: lastPoint.y,
+            rad: lastPoint.rad
+          };
+          data_send.current = {
+            x: ((event.changedTouches[0].pageX - global_x) * new_fact + lastPoint.x * old_fact),
+            y: ((event.changedTouches[0].pageY - 80 - global_y) * new_fact + lastPoint.y * old_fact),
+            rad: event.changedTouches[0].radiusX * new_fact + lastPoint.rad * old_fact
+          };
+          lastPoint = data_send.current;
+          //console.log("send");
+          socket.emit('draw', data_send);
+        }
+      }, false);
+
+      canvas.element.addEventListener('touchend', function(event) {
+        //onupfunc(canvas.ctx);
+        first = 1;
+      }, false);
+
+      //
+      //�}�E�X�C�x���g�֐��Q
+      //
+      canvas.element.onmousedown = function(e) {
+        ondownfunc(canvas.ctx, e.pageX, e.pageY - 80, 30);
+      };
+
+      canvas.element.onmousemove = function(e) {
+        onmovefunc(canvas.ctx, e.pageX, e.pageY - 80, 30);
+      };
+
+      canvas.element.onmouseup = function(e) {
+        onupfunc(canvas.ctx);
+      };
+    }
+
+    function expandCanvas(canv_element) {
+      var w = canv_w - 10;
+      var h = canv_h - 10;
+      var reti = window.devicePixelRatio;
+      scale = reti;
+      canv_element.width = w * reti;
+      canv_element.height = h * reti;
+      canv_element.style.width = w + "px";
+      canv_element.style.height = h + "px";
+      if (getquery["type"] == "host") {
+        changeStyle(canv_element);
+      }
+    }
+
+    function GetQueryString() {
+      var result = {};
+      if (1 < window.location.search.length) {
+        // 最初の1文字 (?記号) を除いた文字列を取得する
+        var query = window.location.search.substring(1);
+
+        // クエリの区切り記号 (&) で文字列を配列に分割する
+        var parameters = query.split('&');
+
+        for (var i = 0; i < parameters.length; i++) {
+          // パラメータ名とパラメータ値に分割する
+          var element = parameters[i].split('=');
+
+          var paramName = decodeURIComponent(element[0]);
+          var paramValue = decodeURIComponent(element[1]);
+
+          // パラメータ名をキーとして連想配列に追加する
+          result[paramName] = paramValue;
+        }
+      }
+      return result;
+    }
+
+    function changeStyle(canv_element) {
+      var style_h;
+      client_w = window.innerWidth;
+      client_h = window.innerHeight;
+      if ((client_h - 80) * 2 < client_w) {
+        style_h = client_h;
+        canv_element.style.left = (client_w - (client_h - 80) * 2) / 2 + "px";
+      }
+      else {
+        style_h = client_w / 2 + 80;
+        canv_element.style.top = (client_h - client_w / 2 - 80) / 2 + 80 + "px";
+      }
+      canv_element.style.width = (style_h - 80) * 2 + "px";
+      canv_element.style.height = style_h - 80 + "px";
+    }
+
+    // iOSの場合とそれ以外とで画面回転時を判定するイベントを切り替える
+    var event = navigator.userAgent.match(/(iPhone|iPod|iPad)/) ? 'orientationchange' : 'resize';
+
+    // 画面回転時に向きをチェック
+    window.addEventListener(event, function checkOrientation() {
+      if ('orientation' in window) {
+        if (getquery["type"] == "client") {
+          client_w = window.innerWidth;
+          client_h = window.innerHeight;
+          dw = canv_w - client_w - 10;
+          dh = canv_h - client_h - 10 + 80;
+          if (global_x > 0) {
+            global_x = 0;
+          }
+          else if (global_x < -dw) {
+            global_x = -dw;
+          }
+          if (global_y > 0) {
+            global_y = 0;
+          }
+          else if (global_y < -dh) {
+            global_y = -dh;
+          }
+          reDraw(newcanvas1.element);
+        }
+        if (getquery["type"] == "host") {
+          changeStyle(newcanvas1.element);
+        }
+      }
+    }, false);
+
+    //
+    //�`���p�֐��Q
+    //
+    function ondownfunc(canvasctx, axis_x, axis_y, rad) {
+      isDrawing = true;
+      lastPoint = {
+        x: axis_x - global_x,
+        y: axis_y - global_y,
+        rad: rad
+      };
+    }
+
+    function onmovefunc(canvasctx, axis_x, axis_y, rad) {
+      if (!isDrawing) return;
+
+      var old_fact = 0.6,
+        new_fact = 0.4;
+      var currentPoint = {
+        x: (lastPoint.x * old_fact + (axis_x - global_x) * new_fact),
+        y: (lastPoint.y * old_fact + (axis_y - global_y) * new_fact),
+        rad: (lastPoint.rad * old_fact + rad * new_fact)
+      };
+      
+
+      lastPoint = currentPoint;
+    }
+
+    function clearline(canvasctx) {
+      canvasctx.clearRect(0, 0, canvasctx.canvas.width, canvasctx.canvas.height);
+    }
+
+    function reDraw(canvaselement) {
+      canvaselement.style.left = global_x + "px";
+      canvaselement.style.top = global_y + 80 + "px";
+      //points.length = 0;
+    }
+
+    
+    var socket = io.connect();
+    
+    socket.on('draw', function(data) {
+      var size;
+      var delta;
+      var x;
+      var y;
+    
+      for (var i = 0; i < data.dist; i += 1) {
+        size = (data.velo.a + data.velo.b * i) * 1.5 - 20;
+        if (size < 2) {
+          size = 2;
+        }
+        //if (size < 8){size = 8;}
+        delta = (45 - size) / 2;
+        x = data.last.x + (Math.sin(data.angle) * i) - 25 + delta;
+        y = data.last.y + (Math.cos(data.angle) * i) - 25 + delta;
+        newcanvas1.ctx.drawImage(brushImg, x, y, size, size);
+      }
+    });
+    
+    socket.on('clear', function(){clearline(newcanvas1.ctx)});
+
+  </script>
+</head>
+
+<body>
+  <header class="cd-header">
+    <div class="cd-logo">
+      <a href="#0"><img src="img/logo_small.svg" alt="Logo">
+      </a>
+    </div>
+
+    <a class="cd-primary-nav-trigger" href="#0">
+      <span class="cd-menu-text">Menu</span><span class="cd-menu-icon"></span>
+    </a>
+    <!-- cd-primary-nav-trigger -->
+  </header>
+
+  <nav>
+    <ul class="cd-primary-nav">
+      <li class="cd-label">Control</li>
+
+      <li>
+        <a href="#" onclick="socket.emit('clear',1);" class="delete-trigger"><img src="image/erase.svg" alt="Logo">
+        </a>
+      </li>
+
+      <li class="cd-label">Menu</li>
+
+      <li>
+        <a href="write.html" onclick="socket.emit('clear');"><img src="image/reload.svg" alt="Logo">
+        </a>
+      </li>
+      <li>
+        <a href="/"><img src="image/title.svg" alt="Logo">
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <div id="startCanvas"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="js/jquery-2.1.1.js"></script>
+  <script src="js/main.js"></script>
+  <!-- Resource jQuery -->
+
+</html>

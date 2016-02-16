@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en" ng-app>
+
+<head>
+    <title>touch radius test</title>
+    <script>
+        var sizeScale = 10;
+        var data_send = {
+            current: [{
+                x: 0.0,
+                y: 0.0,
+                rad: 0.0
+            }]
+        };
+
+        window.onload = function() {
+            startCanvas = document.getElementById("startCanvas");
+            ctx = startCanvas.getContext("2d");
+            addevent(startCanvas);
+        };
+
+        function addevent(canvas) {
+            canvas.addEventListener('touchstart', function(event) {
+                if (event.changedTouches.length == 1) {
+                    data_send.current = {
+                        x: event.changedTouches[0].pageX,
+                        y: event.changedTouches[0].pageY,
+                        rad: event.changedTouches[0].radiusX * sizeScale
+                    };
+                }
+                ctx.fillRect(data_send.current.x, data_send.current.y, data_send.current.rad, data_send.current.rad);
+                console.log(event.changedTouches[0].radiusX);
+            }, false);
+
+            canvas.addEventListener('touchmove', function(event) {
+                if (event.changedTouches.length == 1) {
+                    data_send.current = {
+                        x: event.changedTouches[0].pageX,
+                        y: event.changedTouches[0].pageY,
+                        rad: event.changedTouches[0].radiusX * sizeScale
+                    };
+                }
+                ctx.fillRect(data_send.current.x, data_send.current.y, data_send.current.rad, data_send.current.rad);
+                console.log(event.changedTouches[0].radiusX);
+            }, false);
+
+            canvas.addEventListener('touchend', function(event) {}, false);
+        }
+    </script>
+</head>
+
+<body ontouchmove="event.preventDefault()">
+    <canvas id="startCanvas" height="1000" width="1000"></canvas>
+</body>
+
+</html>
