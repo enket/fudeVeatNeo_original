@@ -1,13 +1,22 @@
 {
-  "name": "chat-example",
-  "version": "0.0.0",
-  "description": "A chat example to showcase how to use `socket.io` with a static `express` server with `async` for control flow.",
+  "name": "fudeVeatNeoOriginal",
+  "version": "1.0.0",
+  "description": "Fude veat NEO original",
   "main": "server.js",
-  "repository": "",
-  "author": "Mostafa Eweda <mo.eweda@gmail.com>",
+  "scripts": {
+    "start": "node index.js"
+  },
   "dependencies": {
     "async": "~0.2.8",
     "express": "~3.2.4",
     "socket.io": "~0.9.14"
-  }
+  },
+  "engines": {
+    "node": "0.10.35"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enket/fudeVeatNeo_original"
+  },
+  "author": "Ryotaro Temma"
 }
